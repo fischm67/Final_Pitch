@@ -1,0 +1,87 @@
+---
+title       : Developing Data Product - Final Pitch 7/23/16
+subtitle    : 
+author      : Mark Fischer
+job         : 
+framework   : revealjs      # {io2012, html5slides, shower, dzslides, ...}
+highlighter : highlight.js  # {highlight.js, prettify, highlight}
+hitheme     : tomorrow      # 
+widgets     : []            # {mathjax, quiz, bootstrap}
+mode        : selfcontained # {standalone, draft}
+knit        : slidify::knit2slides
+---
+
+## Final Pitch for Web Climate App
+
+Mark Fischer  
+Final Project - Developing Data Products  
+July 23, 2016
+
+--- .class #id 
+
+## Importance of Available Climate Data
+
+Average Monthly Climate Data
+
+This presentation is created to satisfy the peer review final project requirements to pitch the final shiny web app.  The importance of understanding the global climate situation is critical for all.  Efforts like the Climate Data Center highlight the one of many repositories around the world collecting climate data.
+* [Climatic Research Unit](http://www.cru.uea.ac.uk/data)
+* [NOAA](https://www.ncdc.noaa.gov/cdo-web/)
+* [Climate Data Guide](https://climatedataguide.ucar.edu/climate-data)
+
+--- .class #id
+
+## The Application
+
+Final Project Web App
+
+Utilize the **R Shiny** package to create a dynamic web application. The Developing Data Products class introduced the **shiny** and **slidify** package constructs to create useful and dynamic data representations.  The shiny package allowed for the creation of a climate mapping and delta temperature application.   [http://fischm67.shinyapps.io/Final_Proj](http://fischm67.shinyapps.io/Final_Proj})
+
+--- .class #id
+
+## Usage
+
+The application utilizes the **sidebarpanel/mainpanel** theme.  The sidebar panel creates `selectInput` boxes to allow the user to choose the Year and Month for each climate plot.  A delta plot is also created to represent the change over time for the average monthly global climate. After the Year/Month selection a "Make/Update Plots" button needs to be pressed to create the plots.
+&nbsp;  
+&nbsp;  
+The data for the app hosted on **`shinyapps.io`** utilized a reduced dataset from 2001-2010.  The link included with the app points to a larger dataset containing data from 1900-2014.
+
+--- .top
+
+## Plot Creation
+
+The explosion of data visualization and analysis tools available through open source allow for the creation of climate maps like these.
+
+```{r, results = 'asis', echo = FALSE, warning = FALSE, error = FALSE, fig.align='center', out.width=1800, out.height=500}
+suppressMessages(library(ncdf4))
+suppressMessages(library(maptools))
+suppressMessages(library(chron))
+suppressMessages(library(RColorBrewer))
+suppressMessages(library(lattice))
+suppressMessages(library(maps))
+suppressMessages(library(fields))
+
+data(wrld_simpl)
+
+dat       <- nc_open("cru10min30_tmp.nc", verbose = FALSE)         # Extract Climate Data
+lon       <- ncvar_get(dat, "lon", verbose = FALSE)             # Extract longitude
+lat       <- ncvar_get(dat, "lat", verbose = FALSE)             # Extract latitude
+tmp_ext   <- ncvar_get(dat, "tmp", verbose = FALSE)             # Extract temp matrix
+fillvalue <- ncatt_get(dat, "tmp", "_FillValue")                # Fill value for NA values
+tmp_ext[tmp_ext == fillvalue$value] <- NA                       # Replace fillvalues with NA
+temp_F    <- tmp_ext * 1.8 + 32                                 # Convert C to F
+t_scale   <- ncvar_get(dat, "time", verbose = FALSE)            # Extract time scale
+tunits    <- ncatt_get(dat, "time", "units")                    # Extract starting time
+nc_close(dat)
+tstring1  <- strsplit(tunits$value," ")
+tstring2  <- strsplit(unlist(tstring1)[3],"-")
+st_year   <- as.integer(unlist(tstring2)[1])
+st_month  <- as.integer(unlist(tstring2)[2])
+st_day    <- as.integer(unlist(tstring2)[3])
+timeline  <- as.Date(chron(t_scale, origin = c(st_month, st_day, st_year)))
+index2    <- which(timeline==as.Date("1976-01-16"))
+temp_slc  <- temp_F[ , , index2]
+image.plot(lon,lat,temp_slc, col = (rev(brewer.pal(10, "RdBu"))), xlab = "", ylab = "")
+title(main = "January 1976 (°F)", cex.main = 2)
+plot(wrld_simpl, add = TRUE)
+```
+The importance of which can't be underestimated.
